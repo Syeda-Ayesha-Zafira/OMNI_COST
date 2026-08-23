@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniCost: Universal Unit Cost Engine</title>
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --dark: #0f172a;
+            --light: #f8fafc;
+            --border: #cbd5e1;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            margin: 0;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            background: white;
+            padding: 35px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+        .header-section {
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+        h1 { 
+            margin: 0 0 10px 0; 
+            color: var(--primary); 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        .control-panel {
+            background: #f1f5f9;
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .control-panel label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #475569;
+        }
+        .grid-header {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 50px;
+            gap: 12px;
+            margin-bottom: 8px;
+            padding: 0 5px;
+            font-weight: 600;
+            font-size: 13px;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .grid-row {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr 50px;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            color: var(--dark);
+            transition: all 0.2s;
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.15);
+        }
+        button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        .btn-add {
+            background: var(--primary);
+            color: white;
+            margin-top: 10px;
+        }
+        .btn-add:hover {
+            background: var(--primary-hover);
+        }
+        .btn-remove {
+            background: #ef4444;
+            color: white;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        .btn-remove:hover {
+            background: #dc2626;
+        }
+        .summary-box {
+            background: #f0fdf4;
+            padding: 24px;
+            border-radius: 12px;
+            margin-top: 35px;
+            border: 1px solid #bbf7d0;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: #374151;
+        }
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+        .summary-value {
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 18px;
+        }
+        .total-allocation { 
+            font-size: 22px; 
+            font-weight: 800; 
+            color: var(--success);
+            border-top: 1px dashed #bbf7d0;
+            padding-top: 12px;
+            margin-top: 12px;
+        }
+        .total-allocation .summary-value {
+            font-size: 26px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-section">
+        <h1>📊 OmniCost: Universal Unit Cost Engine</h1>
+        <p class="subtitle">Map bulk industrial procurement metrics straight to operational usage volumes. Dynamically compute net production expenditures, batch costs, and target per-unit allocations instantly.</p>
+    </div>
+    
+    <!-- Distribution Controls -->
+    <div class="control-panel">
+        <label for="servings">Total Target Allocations (Units / Portions / People):</label>
+        <input type="number" id="servings" value="1" min="1" style="width: 100px;" oninput="calculateTotal()">
+    </div>
+
+    <!-- Table Labels -->
+    <div class="grid-header">
+        <div>Item Description</div>
+        <div>Bulk Price</div>
+        <div>Bulk Qty</div>
+        <div>Used Qty</div>
+        <div></div>
+    </div>
+
+    <!-- Material Batches Container -->
+    <div id="ingredient-rows">
+        <div class="grid-row">
+            <input type="text" placeholder="e.g., Raw Materials, Feed, Stock" class="ing-name">
+            <input type="number" placeholder="0.00" class="ing-bulk-price" min="0" step="0.01" oninput="calculateTotal()">
+            <input type="number" placeholder="1" class="ing-bulk-qty" min="0.1" step="0.1" oninput="calculateTotal()">
+            <input type="number" placeholder="0" class="ing-used-qty" min="0" step="0.1" oninput="calculateTotal()">
+            <button class="btn-remove" onclick="this.parentElement.remove(); calculateTotal();">×</button>
+        </div>
+    </div>
+
+    <button class="btn-add" onclick="addItemRow()">+ Add Material Item</button>
+
+    <!-- Operational Cost Summary Matrix -->
+    <div class="summary-box">
+        <div class="summary-row">
+            <span>Cumulative Batch Production Cost:</span>
+            <span class="summary-value" id="total-recipe-cost">0.00</span>
+        </div>
+        <div class="summary-row total-allocation">
+            <span>Net Cost Per Unit Allocation:</span>
+            <span class="summary-value" id="cost-per-serving">0.00</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    function addItemRow() {
+        const wrapper = document.getElementById('ingredient-rows');
+        const newRow = document.createElement('div');
+        newRow.className = 'grid-row';
+        newRow.innerHTML = `
+            <input type="text" placeholder="e.g., Raw Materials, Feed, Stock" class="ing-name">
+            <input type="number" placeholder="0.00" class="ing-bulk-price" min="0" step="0.01" oninput="calculateTotal()">
+            <input type="number" placeholder="1" class="ing-bulk-qty" min="0.1" step="0.1" oninput="calculateTotal()">
+            <input type="number" placeholder="0" class="ing-used-qty" min="0" step="0.1" oninput="calculateTotal()">
+            <button class="btn-remove" onclick="this.parentElement.remove(); calculateTotal();">×</button>
+        `;
+        wrapper.appendChild(newRow);
+    }
+
+    function calculateTotal() {
+        let totalCost = 0;
+        const rows = document.querySelectorAll('#ingredient-rows .grid-row');
+        const divisions = parseFloat(document.getElementById('servings').value) || 1;
+
+        rows.forEach(row => {
+            const price = parseFloat(row.querySelector('.ing-bulk-price').value) || 0;
+            const bulkQty = parseFloat(row.querySelector('.ing-bulk-qty').value) || 0;
+            const usedQty = parseFloat(row.querySelector('.ing-used-qty').value) || 0;
+
+            if (bulkQty > 0) {
+                const itemCost = (price / bulkQty) * usedQty;
+                totalCost += itemCost;
+            }
+        });
+
+        const costPerUnit = totalCost / divisions;
+
+        document.getElementById('total-recipe-cost').innerText = totalCost.toFixed(2);
+        document.getElementById('cost-per-serving').innerText = costPerUnit.toFixed(2);
+    }
+</script>
+
+</body>
+</html>
